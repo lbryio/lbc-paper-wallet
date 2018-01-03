@@ -33,7 +33,7 @@ ninja.wallets.paperwallet = {
 	count: 0,
 	pageBreakAtDefault: 7,
 	pageBreakAtArtisticDefault: 3,
-	useArtisticWallet: true,
+	useArtisticWallet: false,
 	pageBreakAt: null,
 
 	build: function (numWallets, pageBreakAt, useArtisticWallet, passphrase) {
@@ -225,7 +225,7 @@ ninja.wallets.paperwallet = {
 	},
 
 	resetLimits: function () {
-		var hideArt = document.getElementById("paperart");
+		var hideArt = true;
 		var paperEncrypt = document.getElementById("paperencrypt");
 		var limit;
 		var limitperpage;
