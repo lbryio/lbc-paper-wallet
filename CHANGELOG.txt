@@ -1,5 +1,5 @@
-bitaddress.org 
-Open Source JavaScript Client-Side Bitcoin Wallet Generator
+lbry.io (forked from bitaddress.org)
+Open Source JavaScript Client-Side LBRY Credits Wallet Generator
 
 The bitaddress.org file contains all the JavaScript/Css/Images embedded
 in the HTML document. Included in the file name is the file's version 
@@ -7,7 +7,7 @@ number and hash.
 
 The bitaddress.org software is available Open Source under the MIT License.
 Visit the GitHub Repository for the full copyright and license information:
-https://github.com/pointbiz/bitaddress.org
+https://github.com/lbryio/lbc-paper-wallet
 
 Bitcoin Forum thread:
 https://bitcointalk.org/index.php?topic=43496.0
@@ -24,6 +24,10 @@ END USER NOTES:
  5) BIP38 most likely will not work on mobile devices due to hardware limitations.
 
 Here is a signed list of file names and version history.
+
+2018-01-03: status ACTIVE
+https://github.com/lbryio/lbc-paper-wallet/lbc-paper-wallet.html
+- forked bitaddress.org for lbry.io paper wallet
 
 2016-12-23: status ACTIVE
 bitaddress.org-v3.3.0-SHA256-dec17c07685e1870960903d8f58090475b25af946fe95a734f88408cef4aa194.html

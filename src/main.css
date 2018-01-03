@@ -4,8 +4,8 @@
 			no-repeat left center; width: 17px; height: 17px; display: inline-block; float: right; }
 a { position: relative; z-index: 20; }
 .right { text-align: right; }
-.walletarea { display: none; border: 2px solid #009900; }
-hr { margin: 20px 0; border-top: 2px dashed #008000; }
+.walletarea { display: none; border: 2px solid #055E49; }
+hr { margin: 20px 0; border-top: 2px dashed #055E49; }
 .keyarea { height: 110px; text-align: left; position: relative; padding: 5px; }
 .keyarea .public { float: left; }
 .keyarea .pubaddress { display: inline-block; height: 40px; padding: 0 0 0 10px; float: left; }
@@ -22,7 +22,7 @@ body, html { height: 99%; }
 .question { padding: 10px 15px; text-align: left; cursor: pointer; }
 .question:hover, .expandable:hover { color: #77777A; }
 .answer { padding: 0 15px 10px 25px; text-align: left; display: none; font-size: 80%; }
-.faq { border: 0; border-top: 2px solid #009900; }
+.faq { border: 0; border-top: 2px solid #055E49; }
 .button { margin-left: 5px; margin-right: 5px; }
 input[type=checkbox] { position: relative; z-index: 20; }
 
@@ -30,8 +30,8 @@ input[type=checkbox] { position: relative; z-index: 20; }
 #btcaddress, #btcprivwif, #detailaddress, #detailaddresscomp, #detailprivwif, #detailprivwifcomp { font-family: monospace; font-size: 1.25em; }
 #seedpoolarea { display: none; }
 #seedpooldisplay {  font-family: monospace; font-size: 1em; width: 640px; padding: 15px 5px; word-wrap: break-word; }
-.seedpoint { width: 6px; height: 6px; display: block; border-radius: 3px; background-color: #009900; position: absolute; z-index: 10; }
-#generate { font-family: monospace; font-size: 1.25em; height: 305px; text-align: left; position: relative; padding: 5px; border: 2px solid #009900; clear: both; }
+.seedpoint { width: 6px; height: 6px; display: block; border-radius: 3px; background-color: #055E49; position: absolute; z-index: 10; }
+#generate { font-family: monospace; font-size: 1.25em; height: 305px; text-align: left; position: relative; padding: 5px; border: 2px solid #055E49; clear: both; }
 #generate span { padding: 5px 5px 0 5px; }
 #generatekeyinput { position: relative; z-index: 20; }
 #keyarea { height: 250px; }
@@ -45,13 +45,13 @@ input[type=checkbox] { position: relative; z-index: 20; }
 #singlearea { font-size: 90%; }
 #singlesecret { position: relative; top: -130px; float: right; right: 200px; color: red; font-weight: bolder; font-size: 200%;  }
 #singleshare { position: relative; top: -110px; float: left; left: 160px; color: #009900; font-weight: bolder; font-size: 200%;  }
-#singlesafety { text-align: left; padding: 5px; border-top: 2px solid #009900; top: -25px; position: relative; }
+#singlesafety { text-align: left; padding: 5px; border-top: 2px solid #055E49; top: -25px; position: relative; }
 
 #main { position: relative; text-align: center; margin: 0px auto; width: 808px; }
-#logo { width: 578px; height: 80px; }
+#logo { width: 300px; height: 105px; }
 		
 #paperarea { min-height: 120px; display: none; }
-#paperarea .keyarea { border: 2px solid #009900; border-top: 0; }
+#paperarea .keyarea { border: 2px solid #055E49; border-top: 0; }
 #paperarea .keyarea.art { display: block; height: auto; border: 0; font-family: Ubuntu, Arial; padding: 0; margin: 0; }
 #paperarea .artwallet .papersvg { width: 486px; height: 261px; border: 0; margin: 0; padding: 0; left: 0; }
 #paperarea .artwallet .qrcode_public { top: 52px; left: 17px; z-index: 100; margin: 0; float: none; display: block; position: absolute; background-color: #FFFFFF; 
@@ -118,9 +118,9 @@ input[type=checkbox] { position: relative; z-index: 20; }
 #vanityarea .label { text-decoration: underline; }
 #vanityarea .output { font-family: monospace; font-size: 1.25em; display: block; }
 #vanityarea .notes { text-align: left; font-size: 80%; padding: 0 0 20px 0; }
-#vanitystep1area { display: none; text-align: left; position: relative; padding: 15px; border-bottom: 2px solid #009900; }
+#vanitystep1area { display: none; text-align: left; position: relative; padding: 15px; border-bottom: 2px solid #055E49; }
 #vanitystep1label { padding-left: 5px; }
-#vanitystep2area { border-top: 2px solid #009900; display: block; padding: 15px; }
+#vanitystep2area { border-top: 2px solid #055E49; display: block; padding: 15px; }
 #vanitystep2inputs { padding: 0 15px 10px 15px; }
 #vanitycalc { margin-top: 5px; }
 
@@ -128,8 +128,8 @@ input[type=checkbox] { position: relative; z-index: 20; }
 #splitarea span { padding: 0; }
 #splitcommands { padding: 10px 15px; text-align: left; }
 #combinecommands { padding: 10px 15px; }
-#splitstep1area { display: none; text-align: left; position: relative; padding: 0; border-bottom: 2px solid #009900; }
-.splitsharerow { border-bottom: 2px solid #009900; padding: 15px; }
+#splitstep1area { display: none; text-align: left; position: relative; padding: 0; border-bottom: 2px solid #055E49; }
+.splitsharerow { border-bottom: 2px solid #055E49; padding: 15px; }
 .splitsharerow:last-child { border-bottom: 0; }
 #combinelabelprivatekey { text-decoration: underline; }
 #splitarea .output { display: block; font-family: monospace; font-size: 1.25em; }
@@ -151,28 +151,31 @@ input[type=checkbox] { position: relative; z-index: 20; }
 	.menu  
 	{
 	    text-align: left; margin: 0; padding: 0; display: block;
-	    background-color: #009900; /* # 009900 # 53c100 */
+	    background-color: #055E49; /* # 055E49 # 53c100 */
 	    border-top-left-radius: 5px; border-top-right-radius: 5px;
 	}
 	.menu .tab 
 	{
+		color: #FFF;
 	    position: relative; display: inline-block; border: 0px solid red;
 	    margin: 0; list-style: none; z-index: 110; cursor: pointer; 
 	    top: 1px; padding: 10px 20px; width: 162px; text-align: center;
 	}
 	.menu .tab.selected  
 	{
+		color: #000;
 	    cursor: default; 
 	    background-color: #FFF; margin: 6px 16px; padding: 4px; border-radius: 5px; 
 	}
 	.menu .tab:hover  
 	{
+		color: #000;
 	    background-color: #FFF; margin: 6px 16px; padding: 4px; border-radius: 5px; 
 	}
 	.menu .tab.selected:hover { color: #000; }
 	
     .pagebreak { height: 50px; }
-	.commands { border-bottom: 2px solid #009900;  padding: 10px 2px; margin-bottom: 0; }
+	.commands { border-bottom: 2px solid #055E49;  padding: 10px 2px; margin-bottom: 0; }
 	.commands .row { padding: 0 0; text-align: left; } 
 	.commands .row.extra { padding-top: 6px; }
 	.commands span { padding: 0 10px; }
@@ -199,7 +202,7 @@ input[type=checkbox] { position: relative; z-index: 20; }
 	#detailprivkeypassphrase { width: 250px; position: relative; z-index: 20; }
 	#detailcommands .button { position: relative; z-index: 20; }
 	#detailbip38encryptspan { display: none; }
-	.paper .commands { border: 2px solid #009900; }
+	.paper .commands { border: 2px solid #055E49; }
 	#bulkstartindex, #paperlimit, #paperlimitperpage { width: 35px; } 
 	#bulklimit { width: 45px; }
 			
@@ -224,7 +227,7 @@ input[type=checkbox] { position: relative; z-index: 20; }
 	#main { width: auto; }
 	#singlearea { border: 0; }
 	#singlesafety { border: 0; }
-	#paperarea .keyarea:first-child { border-top: 2px solid #009900; }
+	#paperarea .keyarea:first-child { border-top: 2px solid #055E49; }
 	#paperarea .keyarea.art:first-child { border: 0; }
 	.pagebreak { height: 1px; }
 	.paper #logo { display: none; }
