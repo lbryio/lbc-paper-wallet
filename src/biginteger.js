@@ -1,9 +1,5 @@
-// Upstream 'BigInteger' here:
-// Original Author: http://www-cs-students.stanford.edu/~tjw/jsbn/
-// Follows 'jsbn' on Github: https://github.com/jasondavies/jsbn
-// Review and Testing: https://github.com/cryptocoinjs/bigi/
 /*!
-* Basic JavaScript BN library - subset useful for RSA encryption. v1.4
+* Basic JavaScript BN library - subset useful for RSA encryption. v1.3
 * 
 * Copyright (c) 2005  Tom Wu
 * All Rights Reserved.
@@ -11,16 +7,13 @@
 * http://www-cs-students.stanford.edu/~tjw/jsbn/LICENSE
 *
 * Copyright Stephan Thomas
-* Copyright pointbiz
+* Copyright bitaddress.org
 */
 
 (function () {
 
 	// (public) Constructor function of Global BigInteger object
 	var BigInteger = window.BigInteger = function BigInteger(a, b, c) {
-		if (!(this instanceof BigInteger))
-			return new BigInteger(a, b, c);
-
 		if (a != null)
 			if ("number" == typeof a) this.fromNumber(a, b, c);
 			else if (b == null && "string" != typeof a) this.fromString(a, 256);
@@ -951,7 +944,6 @@
 	// (public) 1/this % m (HAC 14.61)
 	BigInteger.prototype.modInverse = function (m) {
 		var ac = m.isEven();
-		if (this.signum() === 0) throw new Error('division by zero');
 		if ((this.isEven() && ac) || m.signum() == 0) return BigInteger.ZERO;
 		var u = m.clone(), v = this.clone();
 		var a = nbv(1), b = nbv(0), c = nbv(0), d = nbv(1);
@@ -986,9 +978,9 @@
 			}
 		}
 		if (v.compareTo(BigInteger.ONE) != 0) return BigInteger.ZERO;
-		while (d.compareTo(m) >= 0) d.subTo(m, d);
-		while (d.signum() < 0) d.addTo(m, d);
-		return d;
+		if (d.compareTo(m) >= 0) return d.subtract(m);
+		if (d.signum() < 0) d.addTo(m, d); else return d;
+		if (d.signum() < 0) return d.add(m); else return d;
 	};
 
 

@@ -1,81 +1,8 @@
-Bitcoin.KeyPool = (function () {
-	var KeyPool = function () {
-		this.keyArray = [];
-
-		this.push = function (item) {
-			if (item == null || item.priv == null) return;
-			var doAdd = true;
-			// prevent duplicates from being added to the array
-			for (var index in this.keyArray) {
-				var currentItem = this.keyArray[index];
-				if (currentItem != null && currentItem.priv != null && item.getBitcoinAddress() == currentItem.getBitcoinAddress()) {
-					doAdd = false;
-					break;
-				}
-			}
-			if (doAdd) this.keyArray.push(item);
-		};
-
-		this.reset = function () {
-			this.keyArray = [];
-		};
-
-		this.getArray = function () {
-			// copy array
-			return this.keyArray.slice(0);
-		};
-
-		this.setArray = function (ka) {
-			this.keyArray = ka;
-		};
-
-		this.length = function () {
-			return this.keyArray.length;
-		};
-
-		this.toString = function () {
-			var keyPoolString = "# = " + this.length() + "\n";
-			var pool = this.getArray();
-			for (var index in pool) {
-				var item = pool[index];
-				if (Bitcoin.Util.hasMethods(item, 'getBitcoinAddress', 'toString')) {
-					if (item != null) {
-						keyPoolString += "\"" + item.getBitcoinAddress() + "\"" + ", \"" + item.toString("wif") + "\"\n";
-					}
-				}
-			}
-
-			return keyPoolString;
-		};
-
-		return this;
-	};
-
-	return new KeyPool();
-})();
-
-Bitcoin.Bip38Key = (function () {
-	var Bip38 = function (address, encryptedKey) {
-		this.address = address;
-		this.priv = encryptedKey;
-	};
-
-	Bip38.prototype.getBitcoinAddress = function () {
-		return this.address;
-	};
-
-	Bip38.prototype.toString = function () {
-		return this.priv;
-	};
-
-	return Bip38;
-})();
-
 //https://raw.github.com/pointbiz/bitcoinjs-lib/9b2f94a028a7bc9bed94e0722563e9ff1d8e8db8/src/eckey.js
 Bitcoin.ECKey = (function () {
 	var ECDSA = Bitcoin.ECDSA;
-	var KeyPool = Bitcoin.KeyPool;
 	var ecparams = EllipticCurve.getSECCurveByName("secp256k1");
+	var rng = new SecureRandom();
 
 	var ECKey = function (input) {
 		if (!input) {
@@ -90,23 +17,19 @@ Bitcoin.ECKey = (function () {
 			this.priv = BigInteger.fromByteArrayUnsigned(input);
 		} else if ("string" == typeof input) {
 			var bytes = null;
-			try{
-				if (ECKey.isWalletImportFormat(input)) {
-					bytes = ECKey.decodeWalletImportFormat(input);
-				} else if (ECKey.isCompressedWalletImportFormat(input)) {
-					bytes = ECKey.decodeCompressedWalletImportFormat(input);
-					this.compressed = true;
-				} else if (ECKey.isMiniFormat(input)) {
-					bytes = Crypto.SHA256(input, { asBytes: true });
-				} else if (ECKey.isHexFormat(input)) {
-					bytes = Crypto.util.hexToBytes(input);
-				} else if (ECKey.isBase64Format(input)) {
-					bytes = Crypto.util.base64ToBytes(input);
-				}
-			} catch (exc1) {
-				this.setError(exc1);
+			if (ECKey.isWalletImportFormat(input)) {
+				bytes = ECKey.decodeWalletImportFormat(input);
+			} else if (ECKey.isCompressedWalletImportFormat(input)) {
+				bytes = ECKey.decodeCompressedWalletImportFormat(input);
+				this.compressed = true;
+			} else if (ECKey.isMiniFormat(input)) {
+				bytes = Crypto.SHA256(input, { asBytes: true });
+			} else if (ECKey.isHexFormat(input)) {
+				bytes = Crypto.util.hexToBytes(input);
+			} else if (ECKey.isBase64Format(input)) {
+				bytes = Crypto.util.base64ToBytes(input);
 			}
-
+			
 			if (ECKey.isBase6Format(input)) {
 				this.priv = new BigInteger(input, 6);
 			} else if (bytes == null || bytes.length != 32) {
@@ -118,38 +41,12 @@ Bitcoin.ECKey = (function () {
 		}
 
 		this.compressed = (this.compressed == undefined) ? !!ECKey.compressByDefault : this.compressed;
-		try {
-			// check not zero
-			if (this.priv != null && BigInteger.ZERO.compareTo(this.priv) == 0) this.setError("Error: BigInteger equal to zero.");
-			// valid range [0x1, 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364140])
-			var hexKeyRangeLimit = "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364140";
-			var rangeLimitBytes = Crypto.util.hexToBytes(hexKeyRangeLimit);
-			var limitBigInt = BigInteger.fromByteArrayUnsigned(rangeLimitBytes);
-			if (this.priv != null && limitBigInt.compareTo(this.priv) < 0) this.setError("Error: BigInteger outside of curve range.")
-
-			if (this.priv != null) {
-				KeyPool.push(this);
-			}
-		} catch (exc2) {
-			this.setError(exc2);
-		}
 	};
-
-	ECKey.privateKeyPrefix = 0x1c; // mainnet 0x80    testnet 0xEF
 
 	/**
 	* Whether public keys should be returned compressed by default.
 	*/
 	ECKey.compressByDefault = false;
-
-	/**
-	* Set whether the public key should be returned compressed or not.
-	*/
-	ECKey.prototype.setError = function (err) {
-		this.error = err;
-		this.priv = null;
-		return this;
-	};
 
 	/**
 	* Set whether the public key should be returned compressed or not.
@@ -233,8 +130,7 @@ Bitcoin.ECKey = (function () {
 	// Sipa Private Key Wallet Import Format 
 	ECKey.prototype.getBitcoinWalletImportFormat = function () {
 		var bytes = this.getBitcoinPrivateKeyByteArray();
-		if (bytes == null) return "";
-		bytes.unshift(ECKey.privateKeyPrefix); // prepend 0x80 byte
+		bytes.unshift(janin.currency.privateKeyPrefix()); // prepend private key prefix
 		if (this.compressed) bytes.push(0x01); // append 0x01 byte for compressed format
 		var checksum = Crypto.SHA256(Crypto.SHA256(bytes, { asBytes: true }), { asBytes: true });
 		bytes = bytes.concat(checksum.slice(0, 4));
@@ -253,7 +149,6 @@ Bitcoin.ECKey = (function () {
 	};
 
 	ECKey.prototype.getBitcoinPrivateKeyByteArray = function () {
-		if (this.priv == null) return null;
 		// Get a copy of private key as a byte array
 		var bytes = this.priv.toByteArrayUnsigned();
 		// zero pad if private key is less than 32 bytes 
@@ -297,7 +192,8 @@ Bitcoin.ECKey = (function () {
 			throw "Checksum validation failed!";
 		}
 		var version = hash.shift();
-		if (version != ECKey.privateKeyPrefix) {
+        // TODO: detect currency
+		if (version != janin.currency.privateKeyPrefix()) {
 			throw "Version " + version + " not supported!";
 		}
 		return hash;
@@ -317,7 +213,8 @@ Bitcoin.ECKey = (function () {
 			throw "Checksum validation failed!";
 		}
 		var version = hash.shift();
-		if (version != ECKey.privateKeyPrefix) {
+        // TODO: detect currency
+		if (version != janin.currency.privateKeyPrefix()) {
 			throw "Version " + version + " not supported!";
 		}
 		hash.pop();
@@ -333,17 +230,13 @@ Bitcoin.ECKey = (function () {
 	// 51 characters base58, always starts with a '5'
 	ECKey.isWalletImportFormat = function (key) {
 		key = key.toString();
-		return (ECKey.privateKeyPrefix == 0x1c) ?
-							(/^5[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{50}$/.test(key)) :
-							(/^9[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{50}$/.test(key));
+		return janin.currency.WIF_RegEx().test(key);
 	};
 
 	// 52 characters base58
 	ECKey.isCompressedWalletImportFormat = function (key) {
 		key = key.toString();
-		return (ECKey.privateKeyPrefix == 0x1c) ?
-							(/^[LK][123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{51}$/.test(key)) :
-							(/^c[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{51}$/.test(key));
+		return janin.currency.CWIF_RegEx().test(key);
 	};
 
 	// 44 characters
