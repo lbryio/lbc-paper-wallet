@@ -1,13 +1,10 @@
 (function (ninja) {
 	var ut = ninja.unitTests = {
-		runSynchronousTests: function (showOutput) {
-			if (showOutput) {
-				document.getElementById("busyblock").className = "busy";
-				var div = document.createElement("div");
-				div.setAttribute("class", "unittests");
-				div.setAttribute("id", "unittests");
-			}
-			var userKeyPool = Bitcoin.KeyPool.getArray(); // get the user key pool before test keys get added to it
+		runSynchronousTests: function () {
+			document.getElementById("busyblock").className = "busy";
+			var div = document.createElement("div");
+			div.setAttribute("class", "unittests");
+			div.setAttribute("id", "unittests");
 			var testResults = "";
 			var passCount = 0;
 			var testCount = 0;
@@ -32,38 +29,27 @@
 			}
 			testResults += passCount + " of " + testCount + " synchronous tests passed";
 			if (passCount < testCount) {
-				testResults += "<br/><b>" + (testCount - passCount) + " unit test(s) failed</b>";
+				testResults += "<b>" + (testCount - passCount) + " unit test(s) failed</b>";
 			}
-			if (showOutput) {
-				div.innerHTML = "<h3>Unit Tests</h3><div id=\"unittestresults\">" + testResults + "<br/><br/></div>";
-				document.body.appendChild(div);
-				document.getElementById("busyblock").className = "";
-			}
-			Bitcoin.KeyPool.setArray(userKeyPool); // set the key pool so users don't see the test keys
-			return { passCount: passCount, testCount: testCount };
+			div.innerHTML = "<h3>Unit Tests</h3><div id=\"unittestresults\">" + testResults + "<br/><br/></div>";
+			document.body.appendChild(div);
+			document.getElementById("busyblock").className = "";
+
 		},
 
-		runAsynchronousTests: function (showOutput) {
-			if (showOutput) {
-				var div = document.createElement("div");
-				div.setAttribute("class", "unittests");
-				div.setAttribute("id", "asyncunittests");
-				div.innerHTML = "<h3>Async Unit Tests</h3><div id=\"asyncunittestresults\"></div><br/><br/><br/><br/>";
-				document.body.appendChild(div);
-			}
+		runAsynchronousTests: function () {
+			var div = document.createElement("div");
+			div.setAttribute("class", "unittests");
+			div.setAttribute("id", "asyncunittests");
+			div.innerHTML = "<h3>Async Unit Tests</h3><div id=\"asyncunittestresults\"></div><br/><br/><br/><br/>";
+			document.body.appendChild(div);
 
-			var userKeyPool = Bitcoin.KeyPool.getArray();
 			// run the asynchronous tests one after another so we don't crash the browser
 			ninja.foreachSerialized(ninja.unitTests.asynchronousTests, function (name, cb) {
-				//Bitcoin.KeyPool.reset();
 				document.getElementById("busyblock").className = "busy";
 				ninja.unitTests.asynchronousTests[name](cb);
 			}, function () {
-				if (showOutput) {
-					document.getElementById("asyncunittestresults").innerHTML += "running of asynchronous unit tests complete!<br/>";
-				}
-				console.log("running of asynchronous unit tests complete!");
-				Bitcoin.KeyPool.setArray(userKeyPool);
+				document.getElementById("asyncunittestresults").innerHTML += "running of asynchronous unit tests complete!<br/>";
 				document.getElementById("busyblock").className = "";
 			});
 		},
@@ -307,8 +293,7 @@
 				var key = "KxbhchnQquYQ2dfSxz7rrEaQTCukF4uCV57TkamyTbLzjFWcdi3S";
 				var btcKey = new Bitcoin.ECKey(key);
 				if (btcKey.getBitcoinWalletImportFormat() != "KxbhchnQquYQ2dfSxz7rrEaQTCukF4uCV57TkamyTbLzjFWcdi3S"
-						|| btcKey.getPubPoint().compressed != true
-						|| btcKey.compressed != true) {
+						|| btcKey.getPubPoint().compressed != true) {
 					return false;
 				}
 				return true;
@@ -316,8 +301,7 @@
 			testWifToECKey: function () {
 				var key = "5J8QhiQtAiozKwyk3GCycAscg1tNaYhNdiiLey8vaDK8Bzm4znb";
 				var btcKey = new Bitcoin.ECKey(key);
-				if (btcKey.getBitcoinWalletImportFormat() != "5J8QhiQtAiozKwyk3GCycAscg1tNaYhNdiiLey8vaDK8Bzm4znb"
-					|| btcKey.compressed == true) {
+				if (btcKey.getBitcoinWalletImportFormat() != "5J8QhiQtAiozKwyk3GCycAscg1tNaYhNdiiLey8vaDK8Bzm4znb") {
 					return false;
 				}
 				return true;
@@ -475,426 +459,112 @@
 				}
 				return true;
 			},
+            // test split wallet
+            testSplitAndCombinePrivateKey2of2: function () {
+                // lowercase hex key
+                var key = "0004d30da67214fa65a41a6493576944c7ea86713b14db437446c7a8df8e13da"; //5HpJ4bpHFEMWYwCidjtZHwM2rsMh4PRfmZKV8Y21i7msiUkQKUW
+                var numshares = 2;
+                var threshold = 2;
+                secrets.setRNG();
+                secrets.init(7);
 
-			// test split wallet
-			testSplitAndCombinePrivateKey2of2: function () {
-				// lowercase hex key
-				var key = "0004d30da67214fa65a41a6493576944c7ea86713b14db437446c7a8df8e13da"; //5HpJ4bpHFEMWYwCidjtZHwM2rsMh4PRfmZKV8Y21i7msiUkQKUW
-				var numshares = 2;
-				var threshold = 2;
-				secrets.setRNG();
-				secrets.init(7);
+                var shares = ninja.wallets.splitwallet.getFormattedShares(key, numshares, threshold);
+                var combined = ninja.wallets.splitwallet.combineFormattedShares(shares);
+                var btcKey = new Bitcoin.ECKey(combined);
 
-				var shares = ninja.wallets.splitwallet.getFormattedShares(key, numshares, threshold);
-				var combined = ninja.wallets.splitwallet.combineFormattedShares(shares);
-				var btcKey = new Bitcoin.ECKey(combined);
+                if (btcKey.getBitcoinHexFormat() != key.toUpperCase()) {
+                    return false;
+                }
+                return true;
+            },
+            // Example use case #1:
+            // Division of 3 shares:
+            //   1 share in a safety deposit box ("Box")
+            //   1 share at Home
+            //   1 share at Work
+            // Threshold of 2 can be redeemed in these permutations
+            //   Home + Box
+            //   Work + Box
+            //   Home + Work
+            testSplitAndCombinePrivateKey2of3: function () {
+                // lowercase hex key
+                var key = "0004d30da67214fa65a41a6493576944c7ea86713b14db437446c7a8df8e13da"; //5HpJ4bpHFEMWYwCidjtZHwM2rsMh4PRfmZKV8Y21i7msiUkQKUW
+                var numshares = 3;
+                var threshold = 2;
+                secrets.setRNG();
+                secrets.init(7);
 
-				if (btcKey.getBitcoinHexFormat() != key.toUpperCase()) {
-					return false;
-				}
-				return true;
-			},
-			// Example use case #1:
-			// Division of 3 shares:
-			//   1 share in a safety deposit box ("Box")
-			//   1 share at Home
-			//   1 share at Work
-			// Threshold of 2 can be redeemed in these permutations 
-			//   Home + Box 
-			//   Work + Box 
-			//   Home + Work 
-			testSplitAndCombinePrivateKey2of3: function () {
-				// lowercase hex key
-				var key = "0004d30da67214fa65a41a6493576944c7ea86713b14db437446c7a8df8e13da"; //5HpJ4bpHFEMWYwCidjtZHwM2rsMh4PRfmZKV8Y21i7msiUkQKUW
-				var numshares = 3;
-				var threshold = 2;
-				secrets.setRNG();
-				secrets.init(7);
+                var shares = ninja.wallets.splitwallet.getFormattedShares(key, numshares, threshold);
+                shares.shift();
+                var combined = ninja.wallets.splitwallet.combineFormattedShares(shares);
+                var btcKey = new Bitcoin.ECKey(combined);
 
-				var shares = ninja.wallets.splitwallet.getFormattedShares(key, numshares, threshold);
-				shares.shift();
-				var combined = ninja.wallets.splitwallet.combineFormattedShares(shares);
-				var btcKey = new Bitcoin.ECKey(combined);
+                if (btcKey.getBitcoinHexFormat() != key.toUpperCase()) {
+                    return false;
+                }
+                return true;
+            },
+            testSplitAndCombinePrivateKey2of4: function () {
+                // uppercase hex key
+                var key = "292665C3872418ADF1DA7FFA3A646F2F0602246DA6098A91D229C32150F2718B"; //5J8QhiQtAiozKwyk3GCycAscg1tNaYhNdiiLey8vaDK8Bzm4znb
+                var numshares = 4;
+                var threshold = 2;
+                secrets.setRNG();
+                secrets.init(7);
 
-				if (btcKey.getBitcoinHexFormat() != key.toUpperCase()) {
-					return false;
-				}
-				return true;
-			},
-			testSplitAndCombinePrivateKey2of4: function () {
-				// uppercase hex key
-				var key = "292665C3872418ADF1DA7FFA3A646F2F0602246DA6098A91D229C32150F2718B"; //5J8QhiQtAiozKwyk3GCycAscg1tNaYhNdiiLey8vaDK8Bzm4znb
-				var numshares = 4;
-				var threshold = 2;
-				secrets.setRNG();
-				secrets.init(7);
+                var shares = ninja.wallets.splitwallet.getFormattedShares(key, numshares, threshold);
+                shares.shift();
+                shares.shift();
+                var combined = ninja.wallets.splitwallet.combineFormattedShares(shares);
+                var btcKey = new Bitcoin.ECKey(combined);
 
-				var shares = ninja.wallets.splitwallet.getFormattedShares(key, numshares, threshold);
-				shares.shift();
-				shares.shift();
-				var combined = ninja.wallets.splitwallet.combineFormattedShares(shares);
-				var btcKey = new Bitcoin.ECKey(combined);
+                if (btcKey.getBitcoinHexFormat() != key) {
+                    return false;
+                }
+                return true;
+            },
+            // Example use case #2:
+            // Division of 13 shares:
+            //   4 shares in a safety deposit box ("Box")
+            //   3 shares with good friend Angie
+            //   3 shares with good friend Fred
+            //   3 shares with Self at home or office
+            // Threshold of 7 can be redeemed in these permutations
+            //   Self + Box (no trust to spend your coins but your friends are backing up your shares)
+            //   Angie + Box (Angie will send btc to executor of your will)
+            //   Fred + Box (if Angie hasn't already then Fred will send btc to executor of your will)
+            //   Angie + Fred + Self (bank fire/theft then you with both your friends can spend the coins)
+            testSplitAndCombinePrivateKey7of13: function () {
+                var key = "0004d30da67214fa65a41a6493576944c7ea86713b14db437446c7a8df8e13da";
+                var numshares = 12;
+                var threshold = 7;
+                secrets.setRNG();
+                secrets.init(7);
 
-				if (btcKey.getBitcoinHexFormat() != key) {
-					return false;
-				}
-				return true;
-			},
-			// Example use case #2:
-			// Division of 13 shares:
-			//   4 shares in a safety deposit box ("Box")
-			//   3 shares with good friend Angie
-			//   3 shares with good friend Fred
-			//   3 shares with Self at home or office
-			// Threshold of 7 can be redeemed in these permutations 
-			//   Self + Box (no trust to spend your coins but your friends are backing up your shares)
-			//   Angie + Box (Angie will send btc to executor of your will)
-			//   Fred + Box (if Angie hasn't already then Fred will send btc to executor of your will)
-			//   Angie + Fred + Self (bank fire/theft then you with both your friends can spend the coins)
-			testSplitAndCombinePrivateKey7of13: function () {
-				var key = "0004d30da67214fa65a41a6493576944c7ea86713b14db437446c7a8df8e13da";
-				var numshares = 12;
-				var threshold = 7;
-				secrets.setRNG();
-				secrets.init(7);
+                var shares = ninja.wallets.splitwallet.getFormattedShares(key, numshares, threshold);
+                var combined = ninja.wallets.splitwallet.combineFormattedShares(shares);
+                var btcKey = new Bitcoin.ECKey(combined);
 
-				var shares = ninja.wallets.splitwallet.getFormattedShares(key, numshares, threshold);
-				var combined = ninja.wallets.splitwallet.combineFormattedShares(shares);
-				var btcKey = new Bitcoin.ECKey(combined);
+                if (btcKey.getBitcoinHexFormat() != key.toUpperCase()) {
+                    return false;
+                }
+                return true;
+            },
+            testCombinePrivateKeyFromXofYShares: function () {
+                var key = "5K9nHKqbwc1xXpa6wV5p3AaCnubvxQDBukKaFkq7ThAkxgMTMEh";
+                // these are 4 of 6 shares
+                var shares = ["3XxjMASmrkk6eXMM9kAJA7qiqViNVBfiwA1GQDLvg4PVScL", "3Y2DkcPuNX8VKZwpnDdxw55wJtcnCvv2nALqe8nBLViHvck",
+                    "3Y6qv7kyGwgRBKVHVbUNtzmLYAZWQtTPztPwR8wc7uf4MXR", "3YD4TowZn6jw5ss8U89vrcPHonFW4vSs9VKq8MupV5kevG4"]
+                secrets.setRNG();
+                secrets.init(7);
 
-				if (btcKey.getBitcoinHexFormat() != key.toUpperCase()) {
-					return false;
-				}
-				return true;
-			},
-			testCombinePrivateKeyFromXofYShares: function () {
-				var key = "5K9nHKqbwc1xXpa6wV5p3AaCnubvxQDBukKaFkq7ThAkxgMTMEh";
-				// these are 4 of 6 shares
-				var shares = ["3XxjMASmrkk6eXMM9kAJA7qiqViNVBfiwA1GQDLvg4PVScL", "3Y2DkcPuNX8VKZwpnDdxw55wJtcnCvv2nALqe8nBLViHvck", 
-					"3Y6qv7kyGwgRBKVHVbUNtzmLYAZWQtTPztPwR8wc7uf4MXR", "3YD4TowZn6jw5ss8U89vrcPHonFW4vSs9VKq8MupV5kevG4"]
-				secrets.setRNG();
-				secrets.init(7);
-
-				var combined = ninja.wallets.splitwallet.combineFormattedShares(shares);
-				var btcKey = new Bitcoin.ECKey(combined);
-				if (btcKey.getBitcoinWalletImportFormat() != key) {
-					return false;
-				}
-				return true;
-			},
-
-			//Bitcoin.KeyPool tests
-			testKeyPoolStoresCompressedAndUncompressedKey: function () {
-				var keyUncompressed = "5J8QhiQtAiozKwyk3GCycAscg1tNaYhNdiiLey8vaDK8Bzm4znb";
-				var keyCompressed = "KxbhchnQquYQ2dfSxz7rrEaQTCukF4uCV57TkamyTbLzjFWcdi3S";
-				Bitcoin.KeyPool.reset();
-
-				var btcKeyUncompressed = new Bitcoin.ECKey(keyUncompressed);
-				var btcKeyCompressed = new Bitcoin.ECKey(keyCompressed);
-				var pool = Bitcoin.KeyPool.getArray();
-				
-				if (pool.length != 2
-					|| pool[0].getBitcoinWalletImportFormat() != keyUncompressed
-					|| pool[1].getBitcoinWalletImportFormat() != keyCompressed
-				) {
-					return false;
-				}
-				return true;
-			},
-			testKeyPoolPreventDuplicatesWhenAdding: function () {
-				var keyUncompressed = "5J8QhiQtAiozKwyk3GCycAscg1tNaYhNdiiLey8vaDK8Bzm4znb";
-				var keyCompressed = "KxbhchnQquYQ2dfSxz7rrEaQTCukF4uCV57TkamyTbLzjFWcdi3S";
-				var keyHex = "292665C3872418ADF1DA7FFA3A646F2F0602246DA6098A91D229C32150F2718B";
-
-				Bitcoin.KeyPool.reset();
-				var btcKeyUncompressed = new Bitcoin.ECKey(keyUncompressed);
-				var btcKeyCompressed = new Bitcoin.ECKey(keyCompressed);
-				var btcKeyCompressed2 = new Bitcoin.ECKey(keyCompressed);
-				var btcKeyUncompressed2 = new Bitcoin.ECKey(keyUncompressed);
-				var btcKeyHex = new Bitcoin.ECKey(keyHex);
-				var pool = Bitcoin.KeyPool.getArray();
-				
-				if (pool.length != 2
-					|| pool[0].getBitcoinWalletImportFormat() != keyUncompressed
-					|| pool[1].getBitcoinWalletImportFormat() != keyCompressed
-				) {
-					return false;
-				}
-				return true;
-			},
-
-			//BigInteger tests
-			testBigIntegerShouldWorkWithoutNew: function () {
-				var bi = BigInteger('12345')
-				if (bi.toString(10) != '12345') {
-					return false;
-				}
-				return true;
-			},
-			testBigIntegerShouldWorkWithStringInput: function () {
-				if (new BigInteger('12345').toString(16) != '3039') return false;
-				if (new BigInteger('29048849665247').toString(16) != '1a6b765d8cdf') return false;
-				if (new BigInteger('-29048849665247').toString(16) != '-1a6b765d8cdf') return false;
-				if (new BigInteger('1A6B765D8CDF', 16).toString(16) != '1a6b765d8cdf') return false;
-				if (new BigInteger('FF', 16).toString() != '255') return false;
-				if (new BigInteger('1A6B765D8CDF', 16).toString() != '29048849665247') return false;
-				if (new BigInteger('a89c e5af8724 c0a23e0e 0ff77500', 16).toString(16) != 'a89ce5af8724c0a23e0e0ff77500') return false;
-				if (new BigInteger('123456789abcdef123456789abcdef123456789abcdef', 16).toString(16) != '123456789abcdef123456789abcdef123456789abcdef') return false;
-				if (new BigInteger('10654321').toString() != '10654321') return false;
-				if (new BigInteger('10000000000000000').toString(10) != '10000000000000000') return false;
-
-				return true;
-			},
-			testBigIntegerShouldImportExportTwosComplementBigEndian: function () {
-				if (new BigInteger([1, 2, 3], 256).toString(16) != '10203') return false;
-				if (new BigInteger([1, 2, 3, 4], 256).toString(16) != '1020304') return false;
-				if (new BigInteger([1, 2, 3, 4, 5], 256).toString(16) != '102030405') return false;
-				if (new BigInteger([1, 2, 3, 4, 5, 6, 7, 8], 256).toString(16) != '102030405060708') return false;
-				if (new BigInteger([1, 2, 3, 4], 256).toByteArray().join(',') != '1,2,3,4') return false;
-				if (new BigInteger([1, 2, 3, 4, 5, 6, 7, 8], 256).toByteArray().join(',') != '1,2,3,4,5,6,7,8') return false;
-
-				return true;
-			},
-			testBigIntegerShouldReturnProperBitLength: function () {
-				if (new BigInteger('0').bitLength() != 0) return false;
-				if (new BigInteger('1', 16).bitLength() != 1) return false;
-				if (new BigInteger('2', 16).bitLength() != 2) return false;
-				if (new BigInteger('3', 16).bitLength() != 2) return false;
-				if (new BigInteger('4', 16).bitLength() != 3) return false;
-				if (new BigInteger('8', 16).bitLength() != 4) return false;
-				if (new BigInteger('10', 16).bitLength() != 5) return false;
-				if (new BigInteger('100', 16).bitLength() != 9) return false;
-				if (new BigInteger('123456', 16).bitLength() != 21) return false;
-				if (new BigInteger('123456789', 16).bitLength() != 33) return false;
-				if (new BigInteger('8023456789', 16).bitLength() != 40) return false;
-
-				return true;
-			},
-			testBigIntegerShouldAddNumbers: function () {
-				// test 1
-				if (new BigInteger('14').add(new BigInteger('26')).toString(16) != '28') return false;
-
-				// test 2
-				var k = new BigInteger('1234', 16);
-				var r = k;
-				for (var i = 0; i < 257; i++) r = r.add(k);
-				if (r.toString(16) != '125868') return false;
-
-				// test 3
-				var k = new BigInteger('abcdefabcdefabcdef', 16);
-				var r = new BigInteger('deadbeef', 16);
-				for (var i = 0; i < 257; i++) {
-					r = r.add(k);
-				}
-				if (r.toString(16) != 'ac79bd9b79be7a277bde') return false;
-
-				return true;
-			},
-			testBigIntegerShouldSubtractNumbers: function () {
-				// test 1
-				if (new BigInteger('14').subtract(new BigInteger('26')).toString(16) != '-c') return false;
-				// test 2
-				if (new BigInteger('26').subtract(new BigInteger('14')).toString(16) != 'c') return false;
-				// test 3
-				if (new BigInteger('26').subtract(new BigInteger('26')).toString(16) != '0') return false;
-				// test 4
-				if (new BigInteger('-26').subtract(new BigInteger('26')).toString(16) != '-34') return false;
-				// test 5
-				var a = new BigInteger('31ff3c61db2db84b9823d320907a573f6ad37c437abe458b1802cda041d6384a7d8daef41395491e2', 16);
-				var b = new BigInteger('6f0e4d9f1d6071c183677f601af9305721c91d31b0bbbae8fb790000', 16);
-				var r = new BigInteger('31ff3c61db2db84b9823d3208989726578fd75276287cd9516533a9acfb9a6776281f34583ddb91e2', 16);
-				if (a.subtract(b).compareTo(r) != 0) return false;
-				// test 6
-				var r = b.subtract(new BigInteger('14'));
-				if (b.clone().subtract(new BigInteger('14')).compareTo(r) != 0) return false;
-				// test 7
-				var r = new BigInteger('7fffffffffffffffffffffffffffffff5d576e7357a4501ddfe92f46681b', 16);
-				if (r.subtract(new BigInteger('-1')).toString(16) != '7fffffffffffffffffffffffffffffff5d576e7357a4501ddfe92f46681c') return false;
-				// test 8
-				// Carry and copy
-				var a = new BigInteger('12345', 16);
-				var b = new BigInteger('1000000000000', 16);
-				if (a.subtract(b).toString(16) != '-fffffffedcbb') return false;
-				// test 9
-				var a = new BigInteger('12345', 16);
-				var b = new BigInteger('1000000000000', 16);
-				if (b.subtract(a).toString(16) != 'fffffffedcbb') return false;
-				
-				return true;
-			},
-			testBigIntegerShouldMultiplyNumbers: function () {
-				if (new BigInteger('1001', 16).multiply(new BigInteger('1234', 16)).toString(16) != '1235234') return false;
-				if (new BigInteger('-1001', 16).multiply(new BigInteger('1234', 16)).toString(16) != '-1235234') return false;
-				if (new BigInteger('-1001', 16).multiply(new BigInteger('-1234', 16)).toString(16) != '1235234') return false;
-
-				// test 4
-				var n = new BigInteger('1001', 16);
-				var r = n;
-				for (var i = 0; i < 4; i++) {
-					r = r.multiply(n);
-				}
-				if (r.toString(16) != '100500a00a005001') return false;
-
-				var n = new BigInteger('79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798', 16);
-				if (n.multiply(n).toString(16) != '39e58a8055b6fb264b75ec8c646509784204ac15a8c24e05babc9729ab9b055c3a9458e4ce3289560a38e08ba8175a9446ce14e608245ab3a9978a8bd8acaa40') return false;
-				if (n.multiply(n).multiply(n).toString(16) != '1b888e01a06e974017a28a5b4da436169761c9730b7aeedf75fc60f687b46e0cf2cb11667f795d5569482640fe5f628939467a01a612b023500d0161e9730279a7561043af6197798e41b7432458463e64fa81158907322dc330562697d0d600') return false;
-
-				if (new BigInteger('-100000000000').multiply(new BigInteger('3').divide(new BigInteger('4'))).toString(16) != '0') return false;
-
-				return true;
-			},
-			testBigIntegerShouldDivideNumbers: function () {
-				if (new BigInteger('10').divide(new BigInteger('256')).toString(16) != '0') return false;
-				if (new BigInteger('69527932928').divide(new BigInteger('16974594')).toString(16) != 'fff') return false;
-				if (new BigInteger('-69527932928').divide(new BigInteger('16974594')).toString(16) != '-fff') return false;
-
-				var b = new BigInteger('39e58a8055b6fb264b75ec8c646509784204ac15a8c24e05babc9729ab9b055c3a9458e4ce3289560a38e08ba8175a9446ce14e608245ab3a9978a8bd8acaa40', 16);
-				var n = new BigInteger('79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798', 16);
-				if (b.divide(n).toString(16) != n.toString(16)) return false;
-
-				if (new BigInteger('1').divide(new BigInteger('-5')).toString(10) != '0') return false;
-
-				//	// Regression after moving to word div
-				var p = new BigInteger('fffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc2f', 16);
-				var a = new BigInteger('79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798', 16);
-				var as = a.square();
-				if (as.divide(p).toString(16) != '39e58a8055b6fb264b75ec8c646509784204ac15a8c24e05babc9729e58090b9') return false;
-
-				var p = new BigInteger('ffffffff00000001000000000000000000000000ffffffffffffffffffffffff', 16);
-				var a = new BigInteger('fffffffe00000003fffffffd0000000200000001fffffffe00000002ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff', 16);
-				if (a.divide(p).toString(16) != 'ffffffff00000002000000000000000000000001000000000000000000000001') return false;
-				
-				return true;
-			},
-			testBigIntegerShouldModNumbers: function () {
-				if (new BigInteger('10').mod(new BigInteger('256')).toString(16) != 'a') return false;
-				if (new BigInteger('69527932928').mod(new BigInteger('16974594')).toString(16) != '102f302') return false;
-				if (new BigInteger('-69527932928').mod(new BigInteger('16974594')).toString(16) != '1000') return false;
-				if (new BigInteger('10', 16).mod(new BigInteger('256')).toString(16) != '10') return false;
-				if (new BigInteger('100', 16).mod(new BigInteger('256')).toString(16) != '0') return false;
-				if (new BigInteger('1001', 16).mod(new BigInteger('256')).toString(16) != '1') return false;
-				if (new BigInteger('100000000001', 16).mod(new BigInteger('256')).toString(16) != '1') return false;
-				if (new BigInteger('100000000001', 16).mod(new BigInteger('257')).toString(16) != new BigInteger('100000000001', 16).mod(new BigInteger('257')).toString(16)) return false;
-				if (new BigInteger('123456789012', 16).mod(new BigInteger('3')).toString(16) != new BigInteger('123456789012', 16).mod(new BigInteger('3')).toString(16)) return false;
-
-				var p = new BigInteger('ffffffff00000001000000000000000000000000ffffffffffffffffffffffff', 16);
-				var a = new BigInteger('fffffffe00000003fffffffd0000000200000001fffffffe00000002ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff', 16);
-				if (a.mod(p).toString(16) != '0') return false;
-				
-				return true;
-			},
-			testBigIntegerShouldShiftLeftNumbers: function () {
-				if (new BigInteger('69527932928').shiftLeft(13).toString(16) != '2060602000000') return false;
-				if (new BigInteger('69527932928').shiftLeft(45).toString(16) != '206060200000000000000') return false;
-				
-				return true;
-			},
-			testBigIntegerShouldShiftRightNumbers: function () {
-				if (new BigInteger('69527932928').shiftRight(13).toString(16) != '818180') return false;
-				if (new BigInteger('69527932928').shiftRight(17).toString(16) != '81818') return false;
-				if (new BigInteger('69527932928').shiftRight(256).toString(16) != '0') return false;
-				
-				return true;
-			},
-			testBigIntegerShouldModInverseNumbers: function () {
-				var p = new BigInteger('257');
-				var a = new BigInteger('3');
-				var b = a.modInverse(p);
-				if (a.multiply(b).mod(p).toString(16) != '1') return false;
-
-				var p192 = new BigInteger('fffffffffffffffffffffffffffffffeffffffffffffffff', 16);
-				var a = new BigInteger('deadbeef', 16);
-				var b = a.modInverse(p192);
-				if (a.multiply(b).mod(p192).toString(16) != '1') return false;
-				
-				return true;
-			},
-			testBigIntegerShouldThrowOnModInverseOfZero: function () {
-				var p = new BigInteger('257');
-				var a = new BigInteger('0');
-				//division by zero
-				try {
-					a.modInverse(p);
-				}
-				catch (e) {
-					return true;
-				}
-				return false;
-			},
-			testBigIntegerShouldAlwaysReturnPositiveNumber: function () {
-				var z = new BigInteger('cc61934972bba029382f0bef146b228ca15d54f7e38b6cd5f6b382398b7a97a8', 16);
-				var p = new BigInteger('fffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc2f', 16);
-				var zInv = z.modInverse(p);
-				if (zInv.signum() !== 1) return false; //zInv should be positive
-				
-				return true;
-			},
-			testECKeyDoesntHangWithSpecificKey: function () {
-				var key = "848b39bbe4c9ddf978d3d8f786315bdc3ba71237d5f780399e0026e1269313ef";
-				var btcKey = new Bitcoin.ECKey(key);
-				if (btcKey.getPubKeyHex() != "0478BC8F7CB4485E7A0314A698AA1600639FF2922D09C26DED5F730CAC4784477D2B325922459F017AC1E8775436D11D7F84BD84E11CB64FC9BE110931D0C990CE"
-						) {
-					return false;
-				}
-				return true;
-			},
-
-			// test checksum exceptions 
-			testUncompressedWifShouldFailChecksum: function () {
-				// original key: 5KjQAHniFiy18SU7eenyJ9EPYUkjrbiBPfDqw987QjT5vehVQZV   K->k
-				var key = "5kjQAHniFiy18SU7eenyJ9EPYUkjrbiBPfDqw987QjT5vehVQZV";
-				var btcKey = new Bitcoin.ECKey(key);
-				if (btcKey.error.toString().indexOf("failed") == -1) { //Checksum validation failed!
-					return false;
-				}
-				return true;
-
-			},
-			testCompressedWifShouldFailChecksum: function () {
-				// 	original key: L5g9E16m5zEBZqQgMBouUfL6VwW49vCks1hgyxrPHkN8jNNdWTTk   g->G
-				var key = "L5G9E16m5zEBZqQgMBouUfL6VwW49vCks1hgyxrPHkN8jNNdWTTk";
-				var btcKey = new Bitcoin.ECKey(key);
-				if (btcKey.error.toString().indexOf("failed") == -1) { //Checksum validation failed!
-					return false;
-				}
-				return true;
-
-			},
-			// test range of valid private key values for the secp256k1 curve, when specified in hex is 
-			// [0x1, 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364140]
-			testBigIntegerZeroShouldSetError: function () {
-				var key = "0000000000000000000000000000000000000000000000000000000000000000";
-				var btcKey = new Bitcoin.ECKey(key);
-				if (btcKey.error == null) { 
-					return false;
-				}
-				return true;
-
-			},
-			testBigIntegerOutOfCurveRangeShouldSetError1: function () {
-				var key = "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141";
-				var btcKey = new Bitcoin.ECKey(key);
-				if (btcKey.error == null) {
-					return false;
-				}
-				return true;
-			},
-			testBigIntegerOutOfCurveRangeShouldSetError2: function () {
-				var key = "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364142";
-				var btcKey = new Bitcoin.ECKey(key);
-				if (btcKey.error == null) {
-					return false;
-				}
-				return true;
-			},
-			testBigIntegerOutOfCurveRangeShouldSetError3: function () {
-				var key = "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF";
-				var btcKey = new Bitcoin.ECKey(key);
-				if (btcKey.error == null) {
-					return false;
-				}
-				return true;
-			}
+                var combined = ninja.wallets.splitwallet.combineFormattedShares(shares);
+                var btcKey = new Bitcoin.ECKey(combined);
+                if (btcKey.getBitcoinWalletImportFormat() != key) {
+                    return false;
+                }
+                return true;
+            }
 		},
 
 		asynchronousTests: {
@@ -914,50 +584,43 @@
 					["6PgNBNNzDkKdhkT6uJntUXwwzQV8Rr2tZcbkDcuC9DZRsS6AtHts4Ypo1j", "MOLON LABE", "5JLdxTtcTHcfYcmJsNVy1v2PMDx432JPoYcBTVVRHpPaxUrdtf8"],
 					["6PgGWtx25kUg8QWvwuJAgorN6k9FbE25rv5dMRwu5SKMnfpfVe5mar2ngH", Crypto.charenc.UTF8.bytesToString([206, 156, 206, 159, 206, 155, 206, 169, 206, 157, 32, 206, 155, 206, 145, 206, 146, 206, 149])/*UTF-8 characters, encoded in source so they don't get corrupted*/, "5KMKKuUmAkiNbA3DazMQiLfDq47qs8MAEThm4yL8R2PhV1ov33D"]];
 
-				var waitTimeMs = 60000;
-
 				// running each test uses a lot of memory, which isn't freed
 				// immediately, so give the VM a little time to reclaim memory
 				function waitThenCall(callback) {
-					return function () { setTimeout(callback, waitTimeMs); }
+					return function () { setTimeout(callback, 10000); }
 				}
 
-				function log(str) {
-					if (document.getElementById("asyncunittestresults")) document.getElementById("asyncunittestresults").innerHTML += str + "<br/>";
-					console.log(str);
-				}
-
-				var decryptBip38Test = function (test, i, onComplete) {
+				var decryptTest = function (test, i, onComplete) {
 					ninja.privateKey.BIP38EncryptedKeyToByteArrayAsync(test[0], test[1], function (privBytes) {
 						if (privBytes.constructor == Error) {
-							log("fail decryptBip38Test #" + i + ", error: " + privBytes.message);
+							document.getElementById("asyncunittestresults").innerHTML += "fail testDecryptBip38 #" + i + ", error: " + privBytes.message + "<br/>";
 						} else {
 							var btcKey = new Bitcoin.ECKey(privBytes);
 							var wif = !test[2].substr(0, 1).match(/[LK]/) ? btcKey.setCompressed(false).getBitcoinWalletImportFormat() : btcKey.setCompressed(true).getBitcoinWalletImportFormat();
 							if (wif != test[2]) {
-								log("fail decryptBip38Test #" + i);
+								document.getElementById("asyncunittestresults").innerHTML += "fail testDecryptBip38 #" + i + "<br/>";
 							} else {
-								log("pass decryptBip38Test #" + i);
+								document.getElementById("asyncunittestresults").innerHTML += "pass testDecryptBip38 #" + i + "<br/>";
 							}
 						}
 						onComplete();
 					});
 				};
 
-				var encryptBip38Test = function (test, compressed, i, onComplete) {
+				var encryptTest = function (test, compressed, i, onComplete) {
 					ninja.privateKey.BIP38PrivateKeyToEncryptedKeyAsync(test[2], test[1], compressed, function (encryptedKey) {
 						if (encryptedKey === test[0]) {
-							log("pass encryptBip38Test #" + i);
+							document.getElementById("asyncunittestresults").innerHTML += "pass testBip38Encrypt #" + i + "<br/>";
 						} else {
-							log("fail encryptBip38Test #" + i);
-							log("expected " + test[0] + "<br/>received " + encryptedKey);
+							document.getElementById("asyncunittestresults").innerHTML += "fail testBip38Encrypt #" + i + "<br/>";
+							document.getElementById("asyncunittestresults").innerHTML += "expected " + test[0] + "<br/>received " + encryptedKey + "<br/>";
 						}
 						onComplete();
 					});
 				};
 
 				// test randomly generated encryption-decryption cycle
-				var cycleBip38Test = function (i, compress, onComplete) {
+				var cycleTest = function (i, compress, onComplete) {
 					// create new private key
 					var privKey = (new Bitcoin.ECKey(false)).getBitcoinWalletImportFormat();
 
@@ -968,11 +631,11 @@
 							var decryptedKey = (new Bitcoin.ECKey(decryptedBytes)).getBitcoinWalletImportFormat();
 
 							if (decryptedKey === privKey) {
-								log("pass cycleBip38Test #" + i);
+								document.getElementById("asyncunittestresults").innerHTML += "pass cycleBip38 test #" + i + "<br/>";
 							}
 							else {
-								log("fail cycleBip38Test #" + i + " " + privKey);
-								log("encrypted key: " + encryptedKey + "<br/>decrypted key: " + decryptedKey);
+								document.getElementById("asyncunittestresults").innerHTML += "fail cycleBip38 test #" + i + " " + privKey + "<br/>";
+								document.getElementById("asyncunittestresults").innerHTML += "encrypted key: " + encryptedKey + "<br/>decrypted key: " + decryptedKey;
 							}
 							onComplete();
 						});
@@ -981,20 +644,20 @@
 
 				// intermediate test - create some encrypted keys from an intermediate
 				// then decrypt them to check that the private keys are recoverable
-				var intermediateBip38Test = function (i, onComplete) {
+				var intermediateTest = function (i, onComplete) {
 					var pass = Math.random().toString(36).substr(2);
 					ninja.privateKey.BIP38GenerateIntermediatePointAsync(pass, null, null, function (intermediatePoint) {
 						ninja.privateKey.BIP38GenerateECAddressAsync(intermediatePoint, false, function (address, encryptedKey) {
 							ninja.privateKey.BIP38EncryptedKeyToByteArrayAsync(encryptedKey, pass, function (privBytes) {
 								if (privBytes.constructor == Error) {
-									log("fail intermediateBip38Test #" + i + ", error: " + privBytes.message);
+									document.getElementById("asyncunittestresults").innerHTML += "fail testBip38Intermediate #" + i + ", error: " + privBytes.message + "<br/>";
 								} else {
 									var btcKey = new Bitcoin.ECKey(privBytes);
 									var btcAddress = btcKey.getBitcoinAddress();
 									if (address !== btcKey.getBitcoinAddress()) {
-										log("fail intermediateBip38Test #" + i);
+										document.getElementById("asyncunittestresults").innerHTML += "fail testBip38Intermediate #" + i + "<br/>";
 									} else {
-										log("pass intermediateBip38Test #" + i);
+										document.getElementById("asyncunittestresults").innerHTML += "pass testBip38Intermediate #" + i + "<br/>";
 									}
 								}
 								onComplete();
@@ -1003,43 +666,34 @@
 					});
 				}
 
-				var testArray = [
+				document.getElementById("asyncunittestresults").innerHTML += "running " + tests.length + " tests named testDecryptBip38<br/>";
+				document.getElementById("asyncunittestresults").innerHTML += "running 4 tests named testBip38Encrypt<br/>";
+				document.getElementById("asyncunittestresults").innerHTML += "running 2 tests named cycleBip38<br/>";
+				document.getElementById("asyncunittestresults").innerHTML += "running 5 tests named testBip38Intermediate<br/>";
+				ninja.runSerialized([
 					function (cb) {
-						log("running " + tests.length + " tests named decryptBip38Test");
 						ninja.forSerialized(0, tests.length, function (i, callback) {
-							console.log("running decryptBip38Test #" + i + " " + tests[i]);
-							decryptBip38Test(tests[i], i, waitThenCall(callback));
+							decryptTest(tests[i], i, waitThenCall(callback));
 						}, waitThenCall(cb));
-					}
-					,
+					},
 					function (cb) {
-						log("running 4 tests named encryptBip38Test");
 						ninja.forSerialized(0, 4, function (i, callback) {
-							console.log("running encryptBip38Test #" + i + " " + tests[i]);
 							// only first 4 test vectors are not EC-multiply,
 							// compression param false for i = 1,2 and true for i = 3,4
-							encryptBip38Test(tests[i], i >= 2, i, waitThenCall(callback));
+							encryptTest(tests[i], i >= 2, i, waitThenCall(callback));
 						}, waitThenCall(cb));
-					}
-					,
+					},
 					function (cb) {
-						log("running 2 tests named cycleBip38Test");
 						ninja.forSerialized(0, 2, function (i, callback) {
-							console.log("running cycleBip38Test #" + i);
-							cycleBip38Test(i, i % 2 ? true : false, waitThenCall(callback));
+							cycleTest(i, i % 2 ? true : false, waitThenCall(callback));
 						}, waitThenCall(cb));
-					}
-					,
+					},
 					function (cb) {
-						log("running 5 tests named intermediateBip38Test");
 						ninja.forSerialized(0, 5, function (i, callback) {
-							console.log("running intermediateBip38Test #" + i);
-							intermediateBip38Test(i, waitThenCall(callback));
+							intermediateTest(i, waitThenCall(callback));
 						}, cb);
 					}
-				];
-
-				ninja.runSerialized(testArray, done);
+				], done);
 			}
 		}
 	};
