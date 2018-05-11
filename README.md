@@ -36,4 +36,4 @@ The primary contact for this project is [Thomas Zarebczan](https://github.com/tz
 
 ## Additional Info and Links
 
-- [walletgenerator.net LBC Live Site](https://walletgenerator.net/?currency=LBRY Credits) - original site where this site is forked from. 
+- [walletgenerator.net LBC Live Site](https://walletgenerator.net/?currency=LBRY%20Credits) - original site where this site is forked from. 
